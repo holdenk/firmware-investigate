@@ -4,7 +4,7 @@ import argparse
 import platform
 import sys
 
-from .downloaders import CardoDownloader, SenaDownloader
+from .downloaders import CardoDownloader, MotorolaDownloader, SenaDownloader
 
 
 def main():
@@ -15,7 +15,7 @@ def main():
 
     parser.add_argument(
         "--vendor",
-        choices=["sena", "cardo", "all"],
+        choices=["sena", "cardo", "motorola", "all"],
         default="all",
         help="Which vendor's firmware to download (default: all)",
     )
@@ -55,6 +55,8 @@ def main():
         vendors.append(("Sena", SenaDownloader))
     if args.vendor in ["cardo", "all"]:
         vendors.append(("Cardo", CardoDownloader))
+    if args.vendor in ["motorola", "all"]:
+        vendors.append(("Motorola", MotorolaDownloader))
 
     print("Firmware Investigation Toolkit")
     print(f"Working directory: {args.working_dir}")

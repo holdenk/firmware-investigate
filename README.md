@@ -1,16 +1,16 @@
 # firmware-investigate
 
-A toolkit for investigating and reverse-engineering firmware and update tooling for Sena and Cardo motorcycle headsets.
+A toolkit for investigating and reverse-engineering firmware and update tooling for Sena, Cardo, and Motorola Defy Satellite motorcycle headsets.
 
 ## Overview
 
-This repository provides a reproducible scaffold to support reverse engineering of firmware update programs and installers for motorcycle communication headset manufacturers, starting with Sena and Cardo. The toolkit is designed to be expandable for additional vendors.
+This repository provides a reproducible scaffold to support reverse engineering of firmware update programs and installers for motorcycle communication headset manufacturers, starting with Sena, Cardo, and Motorola Defy Satellite. The toolkit is designed to be expandable for additional vendors.
 
 ## Features
 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
 - **Multi-platform support**: Supports both Windows and macOS updater downloads
-- **Multi-vendor support**: Currently supports Sena and Cardo, with architecture to easily add more
+- **Multi-vendor support**: Currently supports Sena, Cardo, and Motorola Defy Satellite, with architecture to easily add more
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
 - **CI/CD**: Automated GitHub Actions workflows for continuous integration
 - **Reproducible**: All downloads go to a `working/` directory that's git-ignored
@@ -57,6 +57,12 @@ Download only Cardo firmware:
 firmware-investigate --vendor cardo
 ```
 
+Download only Motorola Defy Satellite firmware:
+
+```bash
+firmware-investigate --vendor motorola
+```
+
 Download Windows version on any platform:
 
 ```bash
@@ -84,7 +90,7 @@ firmware-investigate --force
 ### Python API
 
 ```python
-from firmware_investigate.downloaders import SenaDownloader, CardoDownloader
+from firmware_investigate.downloaders import SenaDownloader, CardoDownloader, MotorolaDownloader
 
 # Download Sena firmware for current platform
 sena = SenaDownloader(working_dir="working")
@@ -97,6 +103,10 @@ sena_win.download()
 # Download Cardo firmware for macOS specifically
 cardo_mac = CardoDownloader(working_dir="working", platform_override="darwin")
 cardo_mac.download()
+
+# Download Motorola Defy Satellite firmware for Windows
+motorola_win = MotorolaDownloader(working_dir="working", platform_override="windows")
+motorola_win.download()
 ```
 
 ## Download Sources
@@ -112,6 +122,11 @@ The toolkit downloads firmware updater applications from the following sources:
 - **Windows**: https://update.cardosystems.com/cardo-app/cardo_updater_win_latest.exe
 - **macOS**: https://update.cardosystems.com/cardo-app/CardoUpdateLite_OTA_darwin_arm64_latest.dmg
 - **Upstream source**: https://cardo.htskys.com/en/support/upadate-firmware/
+
+### Motorola Defy Satellite
+- **Windows**: https://motorola-global-portal-pit.custhelp.com/euf/assets/software/MotDefySatelliteLinkManager_Setup.exe
+- **macOS**: https://motorola-global-portal-pit.custhelp.com/euf/assets/software/MotDefySatelliteLinkManager.dmg
+- **Upstream source**: https://en-us.support.motorola.com/app/answers/detail/a_id/157173
 
 ## Development
 
@@ -164,7 +179,8 @@ firmware-investigate/
 │           ├── __init__.py
 │           ├── base.py     # Base downloader class
 │           ├── sena.py     # Sena firmware downloader
-│           └── cardo.py    # Cardo firmware downloader
+│           ├── cardo.py    # Cardo firmware downloader
+│           └── motorola.py # Motorola Defy Satellite firmware downloader
 ├── tests/                  # Test suite
 ├── working/                # Downloaded firmware files (git-ignored)
 ├── setup.py                # Package configuration
