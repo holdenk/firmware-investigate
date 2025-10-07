@@ -9,6 +9,7 @@ This repository provides a reproducible scaffold to support reverse engineering 
 ## Features
 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
+- **FCC ID lookup**: Quickly access FCC information for known devices (Sena 50S, Cardo Packtalk Bold, Motorola Defy Satellite)
 - **Multi-platform support**: Supports both Windows and macOS updater downloads
 - **Multi-vendor support**: Currently supports Sena and Cardo, with architecture to easily add more
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
@@ -38,6 +39,8 @@ pip install -r requirements-dev.txt
 ## Usage
 
 ### Command-line interface
+
+#### Firmware Downloads
 
 Download all vendor firmware tools (auto-detects platform):
 
@@ -81,7 +84,37 @@ Force re-download even if files exist:
 firmware-investigate --force
 ```
 
+#### FCC ID Lookup
+
+List all known devices and their FCC information:
+
+```bash
+fcc-lookup --list
+```
+
+Look up a specific device:
+
+```bash
+fcc-lookup --device sena_50s
+fcc-lookup --device cardo_packtalk_bold
+fcc-lookup --device motorola_defy_satellite
+```
+
+Look up an arbitrary FCC ID:
+
+```bash
+fcc-lookup --fcc-id Q95ER19
+```
+
+You can also use the standalone script:
+
+```bash
+python scripts/find_fcc_info.py --list
+```
+
 ### Python API
+
+#### Firmware Downloads
 
 ```python
 from firmware_investigate.downloaders import SenaDownloader, CardoDownloader
@@ -99,6 +132,22 @@ cardo_mac = CardoDownloader(working_dir="working", platform_override="darwin")
 cardo_mac.download()
 ```
 
+#### FCC Lookup
+
+```python
+from firmware_investigate.fcc_lookup import get_device_info, list_all_devices
+
+# Get info for a specific device
+sena_info = get_device_info("sena_50s")
+print(f"FCC ID: {sena_info.fcc_id}")
+print(f"FCC Report: {sena_info.fcc_report_url}")
+
+# List all known devices
+all_devices = list_all_devices()
+for device in all_devices:
+    print(f"{device.name}: {device.fcc_id}")
+```
+
 ## Download Sources
 
 The toolkit downloads firmware updater applications from the following sources:
@@ -112,6 +161,33 @@ The toolkit downloads firmware updater applications from the following sources:
 - **Windows**: https://update.cardosystems.com/cardo-app/cardo_updater_win_latest.exe
 - **macOS**: https://update.cardosystems.com/cardo-app/CardoUpdateLite_OTA_darwin_arm64_latest.dmg
 - **Upstream source**: https://cardo.htskys.com/en/support/upadate-firmware/
+
+## FCC Information
+
+The toolkit includes FCC ID information for the following devices:
+
+### Sena 50S
+- **FCC ID**: Q95ER19
+- **FCC Report**: https://fcc.report/FCC-ID/Q95ER19
+- **Manufacturer**: Sena Technologies
+
+### Cardo Packtalk Bold
+- **FCC ID**: UDO-DMCJBL
+- **FCC Report**: https://fcc.report/FCC-ID/UDO-DMCJBL
+- **Manufacturer**: Cardo Systems
+
+### Motorola Defy Satellite
+- **FCC ID**: IHDT56WJ1
+- **FCC Report**: https://fcc.report/FCC-ID/IHDT56WJ1
+- **Manufacturer**: Motorola Mobility (Lenovo)
+
+The FCC reports contain detailed information about the devices including:
+- Internal photos
+- External photos
+- Test reports
+- User manuals
+- Technical specifications
+- Chip/component information
 
 ## Development
 
@@ -156,10 +232,13 @@ firmware-investigate/
 ├── .github/
 │   └── workflows/
 │       └── ci.yml          # GitHub Actions CI configuration
+├── scripts/
+│   └── find_fcc_info.py    # Standalone FCC lookup script
 ├── src/
 │   └── firmware_investigate/
 │       ├── __init__.py
 │       ├── cli.py          # Command-line interface
+│       ├── fcc_lookup.py   # FCC ID lookup functionality
 │       └── downloaders/
 │           ├── __init__.py
 │           ├── base.py     # Base downloader class
