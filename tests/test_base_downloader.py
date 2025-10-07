@@ -24,6 +24,13 @@ def test_downloader_initialization():
         assert downloader.working_dir.exists()
 
 
+def test_downloader_platform_override():
+    """Test that platform override works."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        downloader = MockDownloader(working_dir=tmpdir, platform_override="windows")
+        assert downloader.platform == "windows"
+
+
 def test_get_filepath():
     """Test filepath generation."""
     with tempfile.TemporaryDirectory() as tmpdir:

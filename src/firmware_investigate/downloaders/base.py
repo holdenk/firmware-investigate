@@ -1,5 +1,6 @@
 """Base downloader class for firmware downloads."""
 
+import platform
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
@@ -8,14 +9,16 @@ from typing import Optional
 class BaseDownloader(ABC):
     """Base class for firmware downloaders."""
 
-    def __init__(self, working_dir: str = "working"):
+    def __init__(self, working_dir: str = "working", platform_override: Optional[str] = None):
         """Initialize the downloader.
 
         Args:
             working_dir: Directory where downloaded files will be stored.
+            platform_override: Override platform detection (windows, darwin, linux).
         """
         self.working_dir = Path(working_dir)
         self.working_dir.mkdir(parents=True, exist_ok=True)
+        self.platform = platform_override or platform.system().lower()
 
     @abstractmethod
     def get_url(self) -> str:

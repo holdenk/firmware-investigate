@@ -1,6 +1,7 @@
 """Command-line interface for firmware investigation tools."""
 
 import argparse
+import platform
 import sys
 
 from .downloaders import CardoDownloader, SenaDownloader
@@ -31,7 +32,23 @@ def main():
         help="Force download even if file already exists",
     )
 
+    parser.add_argument(
+        "--platform",
+        choices=["windows", "darwin", "auto"],
+        default="auto",
+        help="Platform to download for (default: auto-detect)",
+    )
+
     args = parser.parse_args()
+
+    # Determine platform
+    if args.platform == "auto":
+        detected_platform = platform.system().lower()
+        print(f"Auto-detected platform: {detected_platform}")
+        platform_override = None
+    else:
+        platform_override = args.platform
+        print(f"Using specified platform: {platform_override}")
 
     vendors = []
     if args.vendor in ["sena", "all"]:
@@ -45,7 +62,9 @@ def main():
 
     for vendor_name, downloader_class in vendors:
         print(f"\n{vendor_name}:")
-        downloader = downloader_class(working_dir=args.working_dir)
+        downloader = downloader_class(
+            working_dir=args.working_dir, platform_override=platform_override
+        )
 
         try:
             result = downloader.download(force=args.force)

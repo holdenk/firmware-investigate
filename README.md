@@ -9,6 +9,7 @@ This repository provides a reproducible scaffold to support reverse engineering 
 ## Features
 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
+- **Multi-platform support**: Supports both Windows and macOS updater downloads
 - **Multi-vendor support**: Currently supports Sena and Cardo, with architecture to easily add more
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
 - **CI/CD**: Automated GitHub Actions workflows for continuous integration
@@ -38,7 +39,7 @@ pip install -r requirements-dev.txt
 
 ### Command-line interface
 
-Download all vendor firmware tools:
+Download all vendor firmware tools (auto-detects platform):
 
 ```bash
 firmware-investigate
@@ -54,6 +55,18 @@ Download only Cardo firmware:
 
 ```bash
 firmware-investigate --vendor cardo
+```
+
+Download Windows version on any platform:
+
+```bash
+firmware-investigate --platform windows
+```
+
+Download macOS version on any platform:
+
+```bash
+firmware-investigate --platform darwin
 ```
 
 Specify a custom working directory:
@@ -73,14 +86,32 @@ firmware-investigate --force
 ```python
 from firmware_investigate.downloaders import SenaDownloader, CardoDownloader
 
-# Download Sena firmware
+# Download Sena firmware for current platform
 sena = SenaDownloader(working_dir="working")
 sena.download()
 
-# Download Cardo firmware
-cardo = CardoDownloader(working_dir="working")
-cardo.download()
+# Download Sena firmware for Windows specifically
+sena_win = SenaDownloader(working_dir="working", platform_override="windows")
+sena_win.download()
+
+# Download Cardo firmware for macOS specifically
+cardo_mac = CardoDownloader(working_dir="working", platform_override="darwin")
+cardo_mac.download()
 ```
+
+## Download Sources
+
+The toolkit downloads firmware updater applications from the following sources:
+
+### Sena
+- **Windows**: https://firmware.sena.com/senabluetoothmanager/SenaDeviceManagerForWindows-v4.4.16-setup_x64.exe
+- **macOS**: https://firmware.sena.com/senabluetoothmanager/SENADeviceManagerForMAC-v4.4.16.pkg
+- **Upstream source**: https://www.sena.com/en-us/support/device-manager/
+
+### Cardo
+- **Windows**: https://update.cardosystems.com/cardo-app/cardo_updater_win_latest.exe
+- **macOS**: https://update.cardosystems.com/cardo-app/CardoUpdateLite_OTA_darwin_arm64_latest.dmg
+- **Upstream source**: https://cardo.htskys.com/en/support/upadate-firmware/
 
 ## Development
 

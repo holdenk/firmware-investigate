@@ -77,26 +77,54 @@ To add support for a new firmware vendor:
 1. Create a new file in `src/firmware_investigate/downloaders/` (e.g., `vendor_name.py`)
 2. Implement a class that extends `BaseDownloader`
 3. Implement the required abstract methods: `get_url()` and `get_filename()`
-4. Add the new downloader to `src/firmware_investigate/downloaders/__init__.py`
-5. Create corresponding tests in `tests/test_vendor_name_downloader.py`
-6. Update the CLI to support the new vendor in `src/firmware_investigate/cli.py`
+4. Support multiple platforms (Windows, macOS) by checking `self.platform`
+5. Add the new downloader to `src/firmware_investigate/downloaders/__init__.py`
+6. Create corresponding tests in `tests/test_vendor_name_downloader.py`
+7. Update the CLI to support the new vendor in `src/firmware_investigate/cli.py`
 
 Example:
 
 ```python
+from typing import Optional
 from .base import BaseDownloader
 
 class NewVendorDownloader(BaseDownloader):
     """Downloader for NewVendor firmware update tools."""
 
-    NEW_VENDOR_URL = "https://www.newvendor.com/downloads/updater.exe"
-    NEW_VENDOR_FILENAME = "NewVendorUpdater_Setup.exe"
+    # Platform-specific URLs
+    NEW_VENDOR_WINDOWS_URL = "https://www.newvendor.com/downloads/updater-win.exe"
+    NEW_VENDOR_MACOS_URL = "https://www.newvendor.com/downloads/updater-mac.dmg"
+    NEW_VENDOR_UPSTREAM_URL = "https://www.newvendor.com/support/downloads/"
+
+    def __init__(
+        self, working_dir: str = "working", platform_override: Optional[str] = None
+    ):
+        """Initialize NewVendor downloader.
+
+        Args:
+            working_dir: Directory where downloaded files will be stored.
+            platform_override: Override platform detection (windows, darwin).
+        """
+        super().__init__(working_dir, platform_override)
 
     def get_url(self) -> str:
-        return self.NEW_VENDOR_URL
+        """Get the download URL based on platform."""
+        if self.platform == "windows":
+            return self.NEW_VENDOR_WINDOWS_URL
+        elif self.platform == "darwin":
+            return self.NEW_VENDOR_MACOS_URL
+        else:
+            # Default to Windows if platform not recognized
+            return self.NEW_VENDOR_WINDOWS_URL
 
     def get_filename(self) -> str:
-        return self.NEW_VENDOR_FILENAME
+        """Get the filename based on platform."""
+        if self.platform == "windows":
+            return "NewVendorUpdater_Setup.exe"
+        elif self.platform == "darwin":
+            return "NewVendorUpdater.dmg"
+        else:
+            return "NewVendorUpdater_Setup.exe"
 ```
 
 ## Pull Request Process
