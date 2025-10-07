@@ -11,11 +11,26 @@ This repository provides a reproducible scaffold to support reverse engineering 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
 - **Multi-platform support**: Supports both Windows and macOS updater downloads
 - **Multi-vendor support**: Currently supports Sena and Cardo, with architecture to easily add more
+- **Strings analysis**: Extracts strings from binary files for reverse engineering
+- **Network traffic interception**: Uses mitmproxy to capture and analyze firmware update traffic
+- **Wine integration**: Runs Windows updaters on Linux/macOS with proxy configuration
+- **USB device passthrough**: Configures USB device support for Sena and Cardo headsets
+- **End-to-end workflow**: Single command to orchestrate the complete investigation process
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
 - **CI/CD**: Automated GitHub Actions workflows for continuous integration
 - **Reproducible**: All downloads go to a `working/` directory that's git-ignored
 
 ## Installation
+
+### Using uv (recommended)
+
+[uv](https://github.com/astral-sh/uv) is a fast Python package installer:
+
+```bash
+git clone https://github.com/holdenk/firmware-investigate.git
+cd firmware-investigate
+./setup-uv.sh
+```
 
 ### From source
 
@@ -34,6 +49,14 @@ pip install -e ".[dev]"
 # or
 pip install -r requirements-dev.txt
 ```
+
+### Additional dependencies
+
+For the end-to-end workflow, you may need:
+
+- **Wine** (for running Windows executables): `sudo apt-get install wine` (Ubuntu/Debian) or `brew install wine-stable` (macOS)
+- **strings** (for binary analysis): Usually included with binutils
+- **mitmproxy** (installed automatically with the package)
 
 ## Usage
 
@@ -80,6 +103,38 @@ Force re-download even if files exist:
 ```bash
 firmware-investigate --force
 ```
+
+### End-to-end workflow
+
+Run the complete investigation workflow with a single command:
+
+```bash
+# Run complete workflow for all vendors
+firmware-investigate-e2e --vendor all
+
+# Run only for Sena
+firmware-investigate-e2e --vendor sena
+
+# Skip Wine execution (useful if Wine is not installed)
+firmware-investigate-e2e --vendor all --skip-wine
+
+# Skip strings analysis
+firmware-investigate-e2e --vendor cardo --skip-strings
+
+# Use existing downloads
+firmware-investigate-e2e --skip-download --vendor all
+```
+
+The E2E workflow performs the following steps:
+1. **Downloads** firmware updaters for the specified vendor(s)
+2. **Analyzes** binaries using the `strings` command to extract readable strings
+3. **Starts** mitmproxy to intercept network traffic
+4. **Runs** updaters in Wine with proxy configuration
+5. **Captures** and logs all HTTP/HTTPS traffic for analysis
+
+USB device passthrough configuration:
+- **Sena**: Vendor ID `0x0003`, Product ID `0x092B`
+- **Cardo**: Vendor ID `0x2685`, Product ID `0x0900`
 
 ### Python API
 
