@@ -209,3 +209,9 @@ __marimo__/
 # Firmware investigation - working directory for downloads
 working/*
 !working/README.md
+
+# Wine prefix directory
+.wine-firmware-investigate/
+
+# mitmproxy cache
+.mitmproxy/

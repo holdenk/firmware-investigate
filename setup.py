@@ -19,7 +19,7 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.8",
     install_requires=[
-        # No external dependencies for basic downloader
+        "mitmproxy>=10.0",
     ],
     extras_require={
         "dev": [
@@ -33,6 +33,7 @@ setup(
     entry_points={
         "console_scripts": [
             "firmware-investigate=firmware_investigate.cli:main",
+            "firmware-investigate-e2e=firmware_investigate.e2e:main",
         ],
     },
     classifiers=[
