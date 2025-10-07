@@ -154,6 +154,11 @@ cardo_mac = CardoDownloader(working_dir="working", platform_override="darwin")
 cardo_mac.download()
 ```
 
+## Documentation
+
+- **[E2E Workflow Guide](E2E_GUIDE.md)**: Comprehensive guide for the end-to-end firmware investigation workflow
+- **[Contributing Guide](CONTRIBUTING.md)**: How to contribute to the project
+
 ## Download Sources
 
 The toolkit downloads firmware updater applications from the following sources:
