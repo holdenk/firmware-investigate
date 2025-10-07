@@ -33,6 +33,7 @@ setup(
     entry_points={
         "console_scripts": [
             "firmware-investigate=firmware_investigate.cli:main",
+            "fcc-lookup=firmware_investigate.fcc_lookup:main",
         ],
     },
     classifiers=[
