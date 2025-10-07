@@ -34,15 +34,15 @@ class WineRunner:
         """
         env = os.environ.copy()
         env["WINEPREFIX"] = str(self.wine_prefix)
-        
+
         # Configure proxy settings for Wine
         proxy_url = f"http://{self.proxy_host}:{self.proxy_port}"
         env["http_proxy"] = proxy_url
         env["https_proxy"] = proxy_url
-        
+
         # Wine debug settings (reduce noise)
         env["WINEDEBUG"] = "-all"
-        
+
         return env
 
     def check_wine_installed(self) -> bool:
@@ -118,14 +118,14 @@ class WineRunner:
                 capture_output=True,
                 text=True,
             )
-            
+
             print(f"Wine execution completed with exit code: {result.returncode}")
-            
+
             if result.stdout:
                 print(f"STDOUT:\n{result.stdout}")
             if result.stderr:
                 print(f"STDERR:\n{result.stderr}")
-            
+
             return result
 
         except Exception as e:

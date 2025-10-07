@@ -62,27 +62,23 @@ def run_e2e(
     # Determine which vendors to process
     vendors_to_process = []
     if vendor in ["sena", "all"]:
-        vendors_to_process.append(
-            ("Sena", SenaDownloader, SENA_USB_DEVICES)
-        )
+        vendors_to_process.append(("Sena", SenaDownloader, SENA_USB_DEVICES))
     if vendor in ["cardo", "all"]:
-        vendors_to_process.append(
-            ("Cardo", CardoDownloader, CARDO_USB_DEVICES)
-        )
+        vendors_to_process.append(("Cardo", CardoDownloader, CARDO_USB_DEVICES))
 
     # Step 1: Download firmware updaters
     if not skip_download:
         print("\n" + "=" * 80)
         print("STEP 1: Downloading Firmware Updaters")
         print("=" * 80)
-        
+
         for vendor_name, downloader_class, _ in vendors_to_process:
             print(f"\n{vendor_name}:")
             downloader = downloader_class(
                 working_dir=str(working_dir),
                 platform_override=platform,
             )
-            
+
             try:
                 result = downloader.download(force=False)
                 if result:
@@ -100,22 +96,22 @@ def run_e2e(
         print("\n" + "=" * 80)
         print("STEP 2: Strings Analysis")
         print("=" * 80)
-        
+
         analyzer = StringsAnalyzer(min_length=4)
         strings_output_dir = working_dir / "strings_analysis"
         strings_output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         for vendor_name, downloader_class, _ in vendors_to_process:
             downloader = downloader_class(
                 working_dir=str(working_dir),
                 platform_override=platform,
             )
             filepath = downloader.get_filepath()
-            
+
             if filepath.exists():
                 print(f"\nAnalyzing {vendor_name}: {filepath.name}")
                 output_file = strings_output_dir / f"{filepath.stem}_strings.txt"
-                
+
                 try:
                     strings_list = analyzer.analyze(filepath, output_file=output_file)
                     print(f"✓ Found {len(strings_list)} strings")
@@ -131,14 +127,14 @@ def run_e2e(
     print("\n" + "=" * 80)
     print("STEP 3: Starting mitmproxy")
     print("=" * 80)
-    
+
     mitmproxy_dir = working_dir / "mitmproxy"
     mitm_manager = MitmproxyManager(port=8080, output_dir=mitmproxy_dir)
-    
+
     try:
         mitm_process = mitm_manager.start(background=True)
         print("✓ mitmproxy started successfully")
-        print(f"  Listening on: 127.0.0.1:8080")
+        print("  Listening on: 127.0.0.1:8080")
         print(f"  Output directory: {mitmproxy_dir}")
     except Exception as e:
         print(f"✗ Failed to start mitmproxy: {e}")
@@ -151,13 +147,13 @@ def run_e2e(
         print("\n" + "=" * 80)
         print("STEP 4: Running Updaters in Wine")
         print("=" * 80)
-        
+
         wine_runner = WineRunner(
             wine_prefix=working_dir / "wine_prefix",
             proxy_host="127.0.0.1",
             proxy_port=8080,
         )
-        
+
         if not wine_runner.check_wine_installed():
             print("✗ Wine is not installed")
             print("  Install Wine to run Windows executables")
@@ -170,13 +166,19 @@ def run_e2e(
                     platform_override=platform,
                 )
                 filepath = downloader.get_filepath()
-                
+
                 if filepath.exists() and filepath.suffix == ".exe":
-                    print(f"\n{vendor_name}: Running {filepath.name}")
-                    print(f"USB devices to pass through:")
+                    print(
+                        "\n{}: Running {}".format(vendor_name, filepath.name)
+                    )
+                    print("USB devices to pass through:")
                     for device in usb_devices:
-                        print(f"  - Vendor: {device['vendor_id']}, Product: {device['product_id']}")
-                    
+                        print(
+                            "  - Vendor: {}, Product: {}".format(
+                                device["vendor_id"], device["product_id"]
+                            )
+                        )
+
                     try:
                         result = wine_runner.run(
                             executable=filepath,
@@ -187,9 +189,13 @@ def run_e2e(
                         print(f"✗ Error running Wine: {e}")
                 else:
                     if not filepath.exists():
-                        print(f"\n⚠ Skipping {vendor_name}: file not found")
+                        print("\n⚠ Skipping {}: file not found".format(vendor_name))
                     else:
-                        print(f"\n⚠ Skipping {vendor_name}: {filepath.suffix} files not supported in Wine")
+                        print(
+                            "\n⚠ Skipping {}: {} files not supported in Wine".format(
+                                vendor_name, filepath.suffix
+                            )
+                        )
     else:
         print("\n[SKIPPED] Wine execution (--skip-wine)")
 
@@ -197,14 +203,14 @@ def run_e2e(
     print("\n" + "=" * 80)
     print("STEP 5: Cleanup and Summary")
     print("=" * 80)
-    
+
     if mitm_process:
         print("\nStopping mitmproxy...")
         time.sleep(2)  # Give some time for final requests
         mitm_manager.stop()
         print("✓ mitmproxy stopped")
-        
-        print(f"\nCaptured traffic saved to:")
+
+        print("\nCaptured traffic saved to:")
         print(f"  - Flow file: {mitmproxy_dir / 'traffic.mitm'}")
         print(f"  - Request log: {mitmproxy_dir / 'requests.jsonl'}")
         print(f"  - Response log: {mitmproxy_dir / 'responses.jsonl'}")
@@ -217,7 +223,7 @@ def run_e2e(
     print("  1. Review strings analysis in: strings_analysis/")
     print("  2. Analyze captured traffic in: mitmproxy/")
     print("  3. Examine any downloaded firmware binaries")
-    
+
     return 0
 
 

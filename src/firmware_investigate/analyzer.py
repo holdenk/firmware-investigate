@@ -56,9 +56,7 @@ class StringsAnalyzer:
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"strings command failed: {e.stderr}")
         except FileNotFoundError:
-            raise RuntimeError(
-                "strings command not found. Please install binutils package."
-            )
+            raise RuntimeError("strings command not found. Please install binutils package.")
 
     def analyze_all(self, directory: Path) -> dict:
         """Analyze all executable files in a directory.
@@ -70,10 +68,10 @@ class StringsAnalyzer:
             Dictionary mapping filenames to their extracted strings.
         """
         results = {}
-        
+
         # Common executable extensions
         executable_patterns = ["*.exe", "*.dll", "*.pkg", "*.dmg", "*.app"]
-        
+
         for pattern in executable_patterns:
             for filepath in directory.glob(pattern):
                 try:
@@ -82,5 +80,5 @@ class StringsAnalyzer:
                     print(f"Analyzed {filepath.name}: {len(strings_list)} strings found")
                 except Exception as e:
                     print(f"Error analyzing {filepath.name}: {e}")
-        
+
         return results
