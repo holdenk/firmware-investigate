@@ -1,10 +1,10 @@
 """Module for managing mitmproxy configuration and execution."""
 
+import signal
 import subprocess
+import time
 from pathlib import Path
 from typing import Optional
-import time
-import signal
 
 
 class MitmproxyManager:
@@ -26,7 +26,7 @@ class MitmproxyManager:
         self.port = port
         self.output_dir = output_dir or Path("working/mitmproxy")
         self.mode = mode
-        self.process = None
+        self.process: Optional[subprocess.Popen] = None
 
     def check_mitmproxy_installed(self) -> bool:
         """Check if mitmproxy is installed.

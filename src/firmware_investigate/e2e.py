@@ -13,9 +13,11 @@ import argparse
 import sys
 import time
 from pathlib import Path
+from typing import List, Tuple, Type
 
-from firmware_investigate.downloaders import CardoDownloader, SenaDownloader
 from firmware_investigate.analyzer import StringsAnalyzer
+from firmware_investigate.downloaders import CardoDownloader, SenaDownloader
+from firmware_investigate.downloaders.base import BaseDownloader
 from firmware_investigate.mitmproxy_manager import MitmproxyManager
 from firmware_investigate.wine_runner import WineRunner
 
@@ -60,7 +62,7 @@ def run_e2e(
     print()
 
     # Determine which vendors to process
-    vendors_to_process = []
+    vendors_to_process: List[Tuple[str, Type[BaseDownloader], List[dict[str, str]]]] = []
     if vendor in ["sena", "all"]:
         vendors_to_process.append(("Sena", SenaDownloader, SENA_USB_DEVICES))
     if vendor in ["cardo", "all"]:
@@ -168,9 +170,7 @@ def run_e2e(
                 filepath = downloader.get_filepath()
 
                 if filepath.exists() and filepath.suffix == ".exe":
-                    print(
-                        "\n{}: Running {}".format(vendor_name, filepath.name)
-                    )
+                    print("\n{}: Running {}".format(vendor_name, filepath.name))
                     print("USB devices to pass through:")
                     for device in usb_devices:
                         print(
@@ -180,11 +180,11 @@ def run_e2e(
                         )
 
                     try:
-                        result = wine_runner.run(
+                        wine_result = wine_runner.run(
                             executable=filepath,
                             usb_devices=usb_devices,
                         )
-                        print(f"✓ Execution completed (exit code: {result.returncode})")
+                        print(f"✓ Execution completed (exit code: {wine_result.returncode})")
                     except Exception as e:
                         print(f"✗ Error running Wine: {e}")
                 else:
