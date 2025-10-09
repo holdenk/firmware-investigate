@@ -9,6 +9,7 @@ This repository provides a reproducible scaffold to support reverse engineering 
 ## Features
 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
+- **USB Gadget Device Faker**: Creates fake USB devices for Sena and Cardo to test firmware updaters (Linux only, requires root)
 - **Multi-platform support**: Supports both Windows and macOS updater downloads
 - **Multi-vendor support**: Currently supports Sena and Cardo, with architecture to easily add more
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
@@ -81,7 +82,37 @@ Force re-download even if files exist:
 firmware-investigate --force
 ```
 
+Check for USB devices:
+
+```bash
+firmware-investigate --check-usb-devices
+```
+
+Create fake USB devices for testing (requires root and Linux with USB gadget support):
+
+```bash
+sudo firmware-investigate --setup-usb-gadgets
+```
+
+Alternatively, use the standalone USB gadget module:
+
+```bash
+# Check if devices are present
+python -m firmware_investigate.usb_gadget --check-only
+
+# Create fake devices if not present
+sudo python -m firmware_investigate.usb_gadget
+
+# Force create devices even if real ones are present
+sudo python -m firmware_investigate.usb_gadget --force
+
+# Clean up fake devices
+sudo python -m firmware_investigate.usb_gadget --cleanup
+```
+
 ### Python API
+
+#### Firmware Downloaders
 
 ```python
 from firmware_investigate.downloaders import SenaDownloader, CardoDownloader
@@ -98,6 +129,56 @@ sena_win.download()
 cardo_mac = CardoDownloader(working_dir="working", platform_override="darwin")
 cardo_mac.download()
 ```
+
+#### USB Gadget Faker
+
+```python
+from firmware_investigate import USBGadgetFaker
+
+# Create faker instance
+faker = USBGadgetFaker()
+
+# Check if devices are present
+sena_present = faker.check_device_present("0x0003", "0x092b")
+cardo_present = faker.check_device_present("0x2685", "0x0900")
+
+# Create fake devices if not present (requires root on Linux)
+results = faker.setup_fake_devices(check_existing=True)
+
+# Clean up fake devices
+faker.cleanup()
+```
+
+## USB Device Information
+
+The USB gadget faker creates fake devices with the following identifiers:
+
+### Sena Device
+- **Vendor ID**: 0x0003
+- **Product ID**: 0x092b
+- **Manufacturer**: Sena Technologies
+- **Product**: Sena Bluetooth Device
+
+### Cardo Device
+- **Vendor ID**: 0x2685
+- **Product ID**: 0x0900
+- **Manufacturer**: Cardo Systems
+- **Product**: Cardo Bluetooth Device
+
+### Requirements for USB Gadget Functionality
+
+The USB gadget faker requires:
+- Linux operating system with USB gadget support
+- ConfigFS mounted at `/sys/kernel/config/usb_gadget`
+- Available USB Device Controller (UDC)
+- Root privileges to create gadget devices
+
+For testing purposes, you can load the `dummy_hcd` kernel module:
+```bash
+sudo modprobe dummy_hcd
+```
+
+Note: This functionality is primarily for testing firmware updaters in environments where physical devices are not available.
 
 ## Download Sources
 

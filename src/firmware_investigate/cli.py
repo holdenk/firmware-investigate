@@ -5,6 +5,7 @@ import platform
 import sys
 
 from .downloaders import CardoDownloader, SenaDownloader
+from .usb_gadget import USBGadgetFaker
 
 
 def main():
@@ -39,7 +40,40 @@ def main():
         help="Platform to download for (default: auto-detect)",
     )
 
+    parser.add_argument(
+        "--setup-usb-gadgets",
+        action="store_true",
+        help="Create fake USB devices for Sena and Cardo if not present (requires root)",
+    )
+
+    parser.add_argument(
+        "--check-usb-devices",
+        action="store_true",
+        help="Check if Sena and Cardo USB devices are present",
+    )
+
     args = parser.parse_args()
+
+    # Handle USB gadget options
+    if args.check_usb_devices:
+        faker = USBGadgetFaker()
+        print("Checking for USB devices...")
+        sena_present = faker.check_device_present("0x0003", "0x092b")
+        cardo_present = faker.check_device_present("0x2685", "0x0900")
+        print(f"Sena (0x0003:0x092b): {'PRESENT' if sena_present else 'NOT FOUND'}")
+        print(f"Cardo (0x2685:0x0900): {'PRESENT' if cardo_present else 'NOT FOUND'}")
+        return 0
+
+    if args.setup_usb_gadgets:
+        faker = USBGadgetFaker()
+        print("Setting up USB gadgets...")
+        results = faker.setup_fake_devices(check_existing=True)
+        all_success = all(results.values())
+        if all_success:
+            print("\nYou can verify with: lsusb | grep -E '0003:092b|2685:0900'")
+            return 0
+        else:
+            return 1
 
     # Determine platform
     if args.platform == "auto":
