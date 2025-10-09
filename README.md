@@ -9,7 +9,7 @@ This repository provides a reproducible scaffold to support reverse engineering 
 ## Features
 
 - **Automated firmware downloader**: Downloads vendor firmware update programs/installers only if not already present
-- **Multi-platform support**: Supports both Windows and macOS updater downloads
+- **Multi-platform support**: Supports Windows and macOS updater downloads, plus Android APKs
 - **Multi-vendor support**: Currently supports Sena, Cardo, and Motorola Defy Satellite, with architecture to easily add more
 - **Python toolchain**: Clean Python package structure with `tox` for testing and linting
 - **CI/CD**: Automated GitHub Actions workflows for continuous integration
@@ -124,9 +124,10 @@ The toolkit downloads firmware updater applications from the following sources:
 - **Upstream source**: https://cardo.htskys.com/en/support/upadate-firmware/
 
 ### Motorola Defy Satellite
-- **Windows**: https://motorola-global-portal-pit.custhelp.com/euf/assets/software/MotDefySatelliteLinkManager_Setup.exe
-- **macOS**: https://motorola-global-portal-pit.custhelp.com/euf/assets/software/MotDefySatelliteLinkManager.dmg
-- **Upstream source**: https://en-us.support.motorola.com/app/answers/detail/a_id/157173
+- **Android APK (via APKCombo)**: https://apkcombo.com/downloader/#package=com.bullitt.satellitemessenger (Bullitt Satellite Messenger app)
+- **Play Store**: https://play.google.com/store/apps/details?id=com.bullitt.satellitemessenger
+- **APKMirror**: https://www.apkmirror.com/apk/bullitt-group-limited/bullitt-satellite-messenger/
+- **Note**: The Motorola Defy Satellite Link uses a phone app (Bullitt Satellite Messenger) for firmware updates, not a desktop application. Direct APK downloads may require manual intervention due to third-party APK repository restrictions.
 
 ## Development
 
