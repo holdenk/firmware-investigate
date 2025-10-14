@@ -20,8 +20,8 @@ The E2E workflow automates the complete process of investigating firmware update
   - **macOS**: `brew install mitmproxy`
   - **Linux**: Download from [mitmproxy.org](https://mitmproxy.org/) or:
     ```bash
-    wget https://snapshots.mitmproxy.org/10.1.5/mitmproxy-10.1.5-linux-x86_64.tar.gz
-    tar -xzf mitmproxy-10.1.5-linux-x86_64.tar.gz
+    wget [https://snapshots.mitmproxy.org/10.1.5/mitmproxy-10.1.5-linux-x86_64.tar.gz](https://downloads.mitmproxy.org/12.1.2/mitmproxy-12.1.2-linux-x86_64.tar.gz)
+    tar -xzf mitmproxy-12.1.2-linux-x86_64.tar.gz
     sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
     ```
   - **Windows**: Download from [mitmproxy.org](https://mitmproxy.org/)
