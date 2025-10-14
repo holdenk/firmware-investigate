@@ -19,7 +19,7 @@ setup(
     packages=find_packages(where="src"),
     python_requires=">=3.8",
     install_requires=[
-        "mitmproxy>=10.0",
+        # No Python dependencies - mitmproxy should be installed at system level
     ],
     extras_require={
         "dev": [

@@ -57,7 +57,15 @@ For the end-to-end workflow, you may need:
 
 - **Wine** (for running Windows executables): `sudo apt-get install wine` (Ubuntu/Debian) or `brew install wine-stable` (macOS)
 - **strings** (for binary analysis): Usually included with binutils
-- **mitmproxy** (installed automatically with the package)
+- **mitmproxy** (for network traffic interception):
+  - **macOS**: `brew install mitmproxy`
+  - **Linux**: Download from [mitmproxy releases](https://mitmproxy.org/) or:
+    ```bash
+    wget https://snapshots.mitmproxy.org/10.1.5/mitmproxy-10.1.5-linux-x86_64.tar.gz
+    tar -xzf mitmproxy-10.1.5-linux-x86_64.tar.gz
+    sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
+    ```
+  - **Windows**: Download from [mitmproxy releases](https://mitmproxy.org/)
 
 ## Usage
 

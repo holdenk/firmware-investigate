@@ -23,6 +23,33 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
+    - name: Install mitmproxy (macOS)
+      if: runner.os == 'macOS'
+      run: brew install mitmproxy
+    
+    - name: Install mitmproxy (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        # Download and install mitmproxy binary
+        MITM_VERSION="10.1.5"
+        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        mkdir -p ~/.local/bin
+        mv mitmdump mitmproxy mitmweb ~/.local/bin/
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    - name: Install mitmproxy (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        # Download and install mitmproxy binary
+        $MITM_VERSION = "10.1.5"
+        Invoke-WebRequest -Uri "https://snapshots.mitmproxy.org/$MITM_VERSION/mitmproxy-$MITM_VERSION-windows-x86_64.zip" -OutFile mitmproxy.zip
+        Expand-Archive -Path mitmproxy.zip -DestinationPath mitmproxy
+        echo "$PWD/mitmproxy" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+    
+    - name: Verify mitmproxy installation
+      run: mitmdump --version
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -42,6 +69,14 @@ jobs:
       with:
         python-version: '3.11'
     
+    - name: Install mitmproxy
+      run: |
+        # Download and install mitmproxy binary
+        MITM_VERSION="10.1.5"
+        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
+    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -60,6 +95,14 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
+    
+    - name: Install mitmproxy
+      run: |
+        # Download and install mitmproxy binary
+        MITM_VERSION="10.1.5"
+        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
     
     - name: Install dependencies
       run: |

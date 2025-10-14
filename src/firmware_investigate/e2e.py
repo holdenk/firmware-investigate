@@ -140,7 +140,9 @@ def run_e2e(
         print(f"  Output directory: {mitmproxy_dir}")
     except Exception as e:
         print(f"✗ Failed to start mitmproxy: {e}")
-        print("  Note: mitmproxy must be installed (pip install mitmproxy)")
+        print("  Note: mitmproxy must be installed separately")
+        print("  - macOS: brew install mitmproxy")
+        print("  - Linux/Windows: Download from https://mitmproxy.org/")
         print("  Continuing without proxy...")
         mitm_process = None
 

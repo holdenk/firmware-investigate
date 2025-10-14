@@ -16,7 +16,15 @@ The E2E workflow automates the complete process of investigating firmware update
 
 ### Required
 - Python 3.8 or higher
-- mitmproxy (installed automatically with the package)
+- **mitmproxy**: For network traffic interception
+  - **macOS**: `brew install mitmproxy`
+  - **Linux**: Download from [mitmproxy.org](https://mitmproxy.org/) or:
+    ```bash
+    wget https://snapshots.mitmproxy.org/10.1.5/mitmproxy-10.1.5-linux-x86_64.tar.gz
+    tar -xzf mitmproxy-10.1.5-linux-x86_64.tar.gz
+    sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
+    ```
+  - **Windows**: Download from [mitmproxy.org](https://mitmproxy.org/)
 
 ### Optional
 - **Wine**: For running Windows executables
