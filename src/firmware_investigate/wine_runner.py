@@ -7,7 +7,11 @@ from typing import Dict, List, Optional
 
 
 class WineRunner:
-    """Runner for executing Windows programs using Wine."""
+    """Runner for executing Windows programs using Wine.
+
+    Note: Wine does not support USB passthrough. For USB device access,
+    use VirtualBoxRunner instead.
+    """
 
     def __init__(
         self,
@@ -109,7 +113,8 @@ class WineRunner:
                 vendor_id = device.get("vendor_id", "")
                 product_id = device.get("product_id", "")
                 print(f"  - Vendor: {vendor_id}, Product: {product_id}")
-            print("Note: USB passthrough requires additional Wine/QEMU configuration")
+            print("Warning: Wine does not support USB passthrough.")
+            print("Consider using VirtualBoxRunner for USB device access.")
 
         try:
             result = subprocess.run(

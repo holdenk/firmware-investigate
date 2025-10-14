@@ -19,6 +19,7 @@ from firmware_investigate.analyzer import StringsAnalyzer
 from firmware_investigate.downloaders import CardoDownloader, SenaDownloader
 from firmware_investigate.downloaders.base import BaseDownloader
 from firmware_investigate.mitmproxy_manager import MitmproxyManager
+from firmware_investigate.virtualbox_runner import VirtualBoxRunner
 from firmware_investigate.wine_runner import WineRunner
 
 
@@ -146,11 +147,18 @@ def run_e2e(
         print("  Continuing without proxy...")
         mitm_process = None
 
-    # Step 4: Run updaters in Wine
+    # Step 4: Run updaters in VirtualBox or Wine
     if not skip_wine:
         print("\n" + "=" * 80)
-        print("STEP 4: Running Updaters in Wine")
+        print("STEP 4: Running Updaters")
         print("=" * 80)
+
+        # Check for VirtualBox first (preferred for USB passthrough)
+        vbox_runner = VirtualBoxRunner(
+            vm_name="firmware-investigate-vm",
+            proxy_host="127.0.0.1",
+            proxy_port=8080,
+        )
 
         wine_runner = WineRunner(
             wine_prefix=working_dir / "wine_prefix",
@@ -158,12 +166,31 @@ def run_e2e(
             proxy_port=8080,
         )
 
-        if not wine_runner.check_wine_installed():
-            print("✗ Wine is not installed")
-            print("  Install Wine to run Windows executables")
-            print("  On Ubuntu/Debian: sudo apt-get install wine")
-            print("  On macOS: brew install wine-stable")
+        # Prefer VirtualBox if available and VM exists
+        if vbox_runner.check_virtualbox_installed() and vbox_runner.check_vm_exists():
+            print("✓ Using VirtualBox runner (supports USB passthrough)")
+            runner = vbox_runner
+            runner_name = "VirtualBox"
+        elif wine_runner.check_wine_installed():
+            print("✓ Using Wine runner (USB passthrough not supported)")
+            print(
+                "  For USB support, install VirtualBox and create a VM named "
+                "'firmware-investigate-vm'"
+            )
+            runner = wine_runner
+            runner_name = "Wine"
         else:
+            print("✗ No suitable runner found")
+            print("  Install Wine or VirtualBox to run Windows executables")
+            print(
+                "  Wine: sudo apt-get install wine (Ubuntu/Debian) or "
+                "brew install wine-stable (macOS)"
+            )
+            print("  VirtualBox: Download from https://www.virtualbox.org/")
+            runner = None
+            runner_name = None
+
+        if runner:
             for vendor_name, downloader_class, usb_devices in vendors_to_process:
                 downloader = downloader_class(
                     working_dir=str(working_dir),
@@ -173,6 +200,7 @@ def run_e2e(
 
                 if filepath.exists() and filepath.suffix == ".exe":
                     print("\n{}: Running {}".format(vendor_name, filepath.name))
+                    print(f"Using {runner_name} runner")
                     print("USB devices to pass through:")
                     for device in usb_devices:
                         print(
@@ -182,19 +210,19 @@ def run_e2e(
                         )
 
                     try:
-                        wine_result = wine_runner.run(
+                        result = runner.run(
                             executable=filepath,
                             usb_devices=usb_devices,
                         )
-                        print(f"✓ Execution completed (exit code: {wine_result.returncode})")
+                        print(f"✓ Execution completed (exit code: {result.returncode})")
                     except Exception as e:
-                        print(f"✗ Error running Wine: {e}")
+                        print(f"✗ Error running {runner_name}: {e}")
                 else:
                     if not filepath.exists():
                         print("\n⚠ Skipping {}: file not found".format(vendor_name))
                     else:
                         print(
-                            "\n⚠ Skipping {}: {} files not supported in Wine".format(
+                            "\n⚠ Skipping {}: {} files not supported".format(
                                 vendor_name, filepath.suffix
                             )
                         )
