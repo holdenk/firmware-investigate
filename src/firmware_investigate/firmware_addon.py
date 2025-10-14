@@ -36,27 +36,36 @@ class FirmwareAddon:
         """Log HTTP/HTTPS responses."""
         log_entry = {
             "id": self.request_count,
-            "status_code": flow.response.status_code,
-            "headers": dict(flow.response.headers),
-            "content_length": len(flow.response.content) if flow.response.content else 0,
-            "timestamp": flow.response.timestamp_end,
         }
+        response = flow.response
+        if response:
+            log_entry = {
+                "id": self.request_count,
+                "status_code": response.status_code,
+                "headers": dict(response.headers),
+                "content_length": len(response.content) if response.content else 0,
+                "timestamp": response.timestamp_end,
+            }
+            print(
+                f"[{self.request_count}] Response: {response.status_code} "
+                f"({log_entry['content_length']} bytes)"
+            )
+        else:
+            print(f"[{self.request_count}] **NO RESPONSE** ")
 
         # Log to file
         log_file = self.output_dir / "responses.jsonl"
         with open(log_file, "a") as f:
             f.write(json.dumps(log_entry) + "\\n")
 
-        print(
-            f"[{self.request_count}] Response: {flow.response.status_code} "
-            f"({log_entry['content_length']} bytes)"
-        )
-
         # Save firmware binaries if detected
-        if flow.response.content:
+        if flow.response and flow.response.content:
             content_type = flow.response.headers.get("content-type", "")
             print(f"Flow content {content_type} for {flow.request.url}")
-            if any(ext in flow.request.url for ext in [".bin", ".hex", ".fw", ".firmware"]) or "bin" in content_type:
+            if (
+                any(ext in flow.request.url for ext in [".bin", ".hex", ".fw", ".firmware"])
+                or "bin" in content_type
+            ):
                 filename = self.output_dir / f"firmware_{self.request_count}.bin"
                 with open(filename, "wb") as f:
                     f.write(flow.response.content)

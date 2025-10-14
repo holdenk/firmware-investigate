@@ -19,6 +19,7 @@ from firmware_investigate.analyzer import StringsAnalyzer
 from firmware_investigate.downloaders import CardoDownloader, SenaDownloader
 from firmware_investigate.downloaders.base import BaseDownloader
 from firmware_investigate.mitmproxy_manager import MitmproxyManager
+from firmware_investigate.wine_runner import WineRunner
 
 
 # USB device configurations
