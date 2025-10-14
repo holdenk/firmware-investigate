@@ -5,9 +5,15 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from firmware_investigate.base_runner import BaseRunner
 
-class WineRunner:
-    """Runner for executing Windows programs using Wine."""
+
+class WineRunner(BaseRunner):
+    """Runner for executing Windows programs using Wine.
+
+    Note: Wine does not support USB passthrough. For USB device access,
+    use VirtualBoxRunner instead.
+    """
 
     def __init__(
         self,
@@ -22,9 +28,8 @@ class WineRunner:
             proxy_host: Proxy server host for network interception.
             proxy_port: Proxy server port for network interception.
         """
+        super().__init__(proxy_host=proxy_host, proxy_port=proxy_port)
         self.wine_prefix = wine_prefix or Path.home() / ".wine-firmware-investigate"
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
 
     def setup_environment(self) -> Dict[str, str]:
         """Setup Wine environment variables.
@@ -109,7 +114,8 @@ class WineRunner:
                 vendor_id = device.get("vendor_id", "")
                 product_id = device.get("product_id", "")
                 print(f"  - Vendor: {vendor_id}, Product: {product_id}")
-            print("Note: USB passthrough requires additional Wine/QEMU configuration")
+            print("Warning: Wine does not support USB passthrough.")
+            print("Consider using VirtualBoxRunner for USB device access.")
 
         try:
             result = subprocess.run(

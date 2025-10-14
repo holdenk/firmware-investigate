@@ -98,16 +98,26 @@ Configuration:
 - SSL certificate validation is disabled for HTTPS interception
 - Custom addon script logs detailed traffic information
 
-### Step 4: Run Updaters in Wine
+### Step 4: Run Updaters in VirtualBox or Wine
 
-Executes Windows updaters using Wine with:
+Executes Windows updaters using the best available runner:
+
+**VirtualBox Runner (Preferred - supports USB passthrough)**:
+- Native USB device passthrough support
+- Requires a Windows VM named `firmware-investigate-vm`
+- USB filters are automatically configured for target devices
+- Proxy configuration for network interception
+
+**Wine Runner (Fallback - no USB support)**:
 - Proxy environment variables set (`http_proxy`, `https_proxy`)
 - Custom Wine prefix to isolate the environment
-- USB device passthrough configuration:
-  - **Sena**: Vendor ID `0x0003`, Product ID `0x092B`
-  - **Cardo**: Vendor ID `0x2685`, Product ID `0x0900`
+- **Does NOT support USB passthrough**
 
-Note: USB passthrough requires additional Wine/QEMU configuration.
+USB device configuration:
+- **Sena**: Vendor ID `0x0003`, Product ID `0x092B`
+- **Cardo**: Vendor ID `0x2685`, Product ID `0x0900`
+
+The workflow automatically prefers VirtualBox when available and falls back to Wine if VirtualBox is not installed or the VM doesn't exist.
 
 ### Step 5: Cleanup and Summary
 
@@ -202,6 +212,21 @@ grep -i "version" working/strings_analysis/*.txt
 
 ## Troubleshooting
 
+### VirtualBox Not Installed
+
+If you want USB passthrough support, install VirtualBox:
+```bash
+# Ubuntu/Debian
+sudo apt-get install virtualbox
+
+# macOS
+brew install --cask virtualbox
+
+# Or download from https://www.virtualbox.org/
+```
+
+Then create a Windows VM named `firmware-investigate-vm` and install Guest Additions.
+
 ### Wine Not Installed
 
 If Wine is not installed, use `--skip-wine`:
@@ -238,7 +263,7 @@ Possible reasons:
 
 ## USB Device Passthrough
 
-The E2E workflow configures USB device passthrough for:
+The E2E workflow automatically configures USB device passthrough when using VirtualBox:
 
 ### Sena Devices
 - Vendor ID: `0x0003`
@@ -248,10 +273,38 @@ The E2E workflow configures USB device passthrough for:
 - Vendor ID: `0x2685`
 - Product ID: `0x0900`
 
-Note: Actual USB passthrough requires additional configuration:
-1. Wine with QEMU or VirtualBox backend
-2. USB device rules in `/etc/udev/rules.d/`
-3. User permissions for USB devices
+### VirtualBox Runner (Recommended)
+The VirtualBox runner provides **native USB passthrough support**:
+1. Automatically creates USB filters for target devices
+2. Devices are available when connected to the host
+3. No additional configuration required beyond creating the VM
+
+### Wine Runner (Limited)
+**Wine does NOT support USB passthrough.** If you need USB device access:
+1. Install VirtualBox and create a Windows VM
+2. Name the VM `firmware-investigate-vm`
+3. Install Windows and VirtualBox Guest Additions
+4. The E2E workflow will automatically use VirtualBox instead of Wine
+
+### Manual VirtualBox Setup
+To create a VM for the E2E workflow:
+```bash
+# Create a new Windows VM
+VBoxManage createvm --name firmware-investigate-vm --register
+
+# Configure the VM (example for Windows 10 64-bit)
+VBoxManage modifyvm firmware-investigate-vm \
+  --ostype Windows10_64 \
+  --memory 4096 \
+  --vram 128 \
+  --cpus 2
+
+# Enable USB 2.0 or 3.0 controller (requires VirtualBox Extension Pack)
+VBoxManage modifyvm firmware-investigate-vm --usb on --usbehci on
+
+# Attach a Windows installation ISO and complete Windows installation
+# Then install VirtualBox Guest Additions in the VM
+```
 
 ## Python API
 
@@ -262,6 +315,7 @@ from pathlib import Path
 from firmware_investigate.downloaders import SenaDownloader
 from firmware_investigate.analyzer import StringsAnalyzer
 from firmware_investigate.mitmproxy_manager import MitmproxyManager
+from firmware_investigate.virtualbox_runner import VirtualBoxRunner
 from firmware_investigate.wine_runner import WineRunner
 
 # Download
@@ -276,7 +330,18 @@ strings = analyzer.analyze(filepath, output_file=Path("working/sena_strings.txt"
 mitm = MitmproxyManager(port=8080, output_dir=Path("working/mitm"))
 process = mitm.start(background=True)
 
-# Run in Wine
+# Run in VirtualBox (preferred for USB support)
+vbox = VirtualBoxRunner(
+    vm_name="firmware-investigate-vm",
+    proxy_host="127.0.0.1",
+    proxy_port=8080
+)
+result = vbox.run(
+    executable=filepath,
+    usb_devices=[{"vendor_id": "0x0003", "product_id": "0x092B"}]
+)
+
+# Or run in Wine (no USB support)
 wine = WineRunner(
     wine_prefix=Path("working/wine_prefix"),
     proxy_host="127.0.0.1",
@@ -284,7 +349,7 @@ wine = WineRunner(
 )
 result = wine.run(
     executable=filepath,
-    usb_devices=[{"vendor_id": "0x0003", "product_id": "0x092B"}]
+    usb_devices=[{"vendor_id": "0x0003", "product_id": "0x092B"}]  # Warning: not supported
 )
 
 # Stop proxy
