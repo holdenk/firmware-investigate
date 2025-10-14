@@ -4,8 +4,10 @@ import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from firmware_investigate.base_runner import BaseRunner
 
-class VirtualBoxRunner:
+
+class VirtualBoxRunner(BaseRunner):
     """Runner for executing Windows programs using VirtualBox with USB passthrough support."""
 
     def __init__(
@@ -21,9 +23,8 @@ class VirtualBoxRunner:
             proxy_host: Proxy server host for network interception.
             proxy_port: Proxy server port for network interception.
         """
+        super().__init__(proxy_host=proxy_host, proxy_port=proxy_port)
         self.vm_name = vm_name
-        self.proxy_host = proxy_host
-        self.proxy_port = proxy_port
 
     def check_virtualbox_installed(self) -> bool:
         """Check if VirtualBox is installed.

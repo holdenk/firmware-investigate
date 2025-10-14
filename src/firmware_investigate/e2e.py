@@ -13,11 +13,13 @@ import argparse
 import sys
 import time
 from pathlib import Path
-from typing import List, Tuple, Type
+from typing import List, Optional, Tuple, Type
 
 from firmware_investigate.analyzer import StringsAnalyzer
+from firmware_investigate.base_runner import BaseRunner
 from firmware_investigate.downloaders import CardoDownloader, SenaDownloader
 from firmware_investigate.downloaders.base import BaseDownloader
+from firmware_investigate.macos_runner import MacOSRunner
 from firmware_investigate.mitmproxy_manager import MitmproxyManager
 from firmware_investigate.virtualbox_runner import VirtualBoxRunner
 from firmware_investigate.wine_runner import WineRunner
@@ -167,6 +169,9 @@ def run_e2e(
         )
 
         # Prefer VirtualBox if available and VM exists
+        runner: Optional[BaseRunner] = None
+        runner_name: Optional[str] = None
+
         if vbox_runner.check_virtualbox_installed() and vbox_runner.check_vm_exists():
             print("✓ Using VirtualBox runner (supports USB passthrough)")
             runner = vbox_runner
@@ -180,52 +185,72 @@ def run_e2e(
             runner = wine_runner
             runner_name = "Wine"
         else:
-            print("✗ No suitable runner found")
+            print("✗ No suitable runner found for Windows executables")
             print("  Install Wine or VirtualBox to run Windows executables")
             print(
                 "  Wine: sudo apt-get install wine (Ubuntu/Debian) or "
                 "brew install wine-stable (macOS)"
             )
             print("  VirtualBox: Download from https://www.virtualbox.org/")
-            runner = None
-            runner_name = None
 
-        if runner:
-            for vendor_name, downloader_class, usb_devices in vendors_to_process:
-                downloader = downloader_class(
-                    working_dir=str(working_dir),
-                    platform_override=platform,
+        # Process each vendor
+        for vendor_name, downloader_class, usb_devices in vendors_to_process:
+            downloader = downloader_class(
+                working_dir=str(working_dir),
+                platform_override=platform,
+            )
+            filepath = downloader.get_filepath()
+
+            if not filepath.exists():
+                print("\n⚠ Skipping {}: file not found".format(vendor_name))
+                continue
+
+            # Determine which runner to use based on file type
+            current_runner: Optional[BaseRunner] = None
+            current_runner_name: Optional[str] = None
+
+            if filepath.suffix == ".exe":
+                # Windows executable - use VirtualBox or Wine
+                if runner:
+                    current_runner = runner
+                    current_runner_name = runner_name
+            elif filepath.suffix in [".pkg", ".dmg", ".app"]:
+                # macOS executable - use MacOSRunner
+                macos_runner = MacOSRunner(
+                    proxy_host="127.0.0.1",
+                    proxy_port=8080,
                 )
-                filepath = downloader.get_filepath()
-
-                if filepath.exists() and filepath.suffix == ".exe":
-                    print("\n{}: Running {}".format(vendor_name, filepath.name))
-                    print(f"Using {runner_name} runner")
-                    print("USB devices to pass through:")
-                    for device in usb_devices:
-                        print(
-                            "  - Vendor: {}, Product: {}".format(
-                                device["vendor_id"], device["product_id"]
-                            )
-                        )
-
-                    try:
-                        result = runner.run(
-                            executable=filepath,
-                            usb_devices=usb_devices,
-                        )
-                        print(f"✓ Execution completed (exit code: {result.returncode})")
-                    except Exception as e:
-                        print(f"✗ Error running {runner_name}: {e}")
+                if macos_runner.check_macos():
+                    current_runner = macos_runner
+                    current_runner_name = "macOS"
                 else:
-                    if not filepath.exists():
-                        print("\n⚠ Skipping {}: file not found".format(vendor_name))
-                    else:
-                        print(
-                            "\n⚠ Skipping {}: {} files not supported".format(
-                                vendor_name, filepath.suffix
-                            )
+                    print("\n⚠ Skipping {}: macOS files can only run on macOS".format(vendor_name))
+                    continue
+            else:
+                print(
+                    "\n⚠ Skipping {}: {} files not supported".format(vendor_name, filepath.suffix)
+                )
+                continue
+
+            if current_runner and current_runner_name:
+                print("\n{}: Running {}".format(vendor_name, filepath.name))
+                print(f"Using {current_runner_name} runner")
+                print("USB devices to pass through:")
+                for device in usb_devices:
+                    print(
+                        "  - Vendor: {}, Product: {}".format(
+                            device["vendor_id"], device["product_id"]
                         )
+                    )
+
+                try:
+                    run_result = current_runner.run(
+                        executable=filepath,
+                        usb_devices=usb_devices,
+                    )
+                    print(f"✓ Execution completed (exit code: {run_result.returncode})")
+                except Exception as e:
+                    print(f"✗ Error running {current_runner_name}: {e}")
     else:
         print("\n[SKIPPED] Wine execution (--skip-wine)")
 
