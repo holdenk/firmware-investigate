@@ -215,3 +215,9 @@ working/*
 
 # mitmproxy cache
 .mitmproxy/
+
+# mitm proxy commands
+mitmdump
+mitmproxy
+mitmweb
+mitmproxy*.tar.gz

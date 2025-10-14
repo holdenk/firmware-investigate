@@ -16,9 +16,13 @@ fi
 echo "Using uv version:"
 uv --version
 
-# Create virtual environment with uv
-echo "Creating virtual environment..."
-uv venv
+if [ -d .venv/ ]; then
+  echo "Reusing exisitng venv."
+else
+  # Create virtual environment with uv
+  echo "Creating virtual environment..."
+  uv venv
+fi
 
 # Activate virtual environment
 echo "To activate the virtual environment, run:"
@@ -30,14 +34,38 @@ echo ""
 echo "Installing package and dependencies..."
 uv pip install -e ".[dev]"
 
+if ! command -v mitmproxy &> /dev/null; then
+  if command -v brew; then
+    brew install mitmproxy
+  else
+    if [ ! -f mitmproxy-12.1.2-linux-x86_64.tar.gz ]; then
+      wget https://downloads.mitmproxy.org/12.1.2/mitmproxy-12.1.2-linux-x86_64.tar.gz || echo "Error downloading mitm proxy?"
+    fi
+    if [ ! -d mitmproxy-12.1.2-linux-x86_64 ]; then
+      tar -xvf mitmproxy-12.1.2-linux-x86_64.tar.gz || echo "Error extracting mitmproxy"
+    fi
+    export PATH="$PATH:""$(pwd)/"
+  fi
+fi
+
 echo ""
 echo "Setup complete! The project is ready to use."
 echo ""
-echo "IMPORTANT: mitmproxy must be installed separately:"
-echo "  - macOS: brew install mitmproxy"
-echo "  - Linux: Download from https://mitmproxy.org/"
-echo "  - Windows: Download from https://mitmproxy.org/"
-echo ""
+if ! command -v mitmproxy &> /dev/null; then
+  echo "IMPORTANT: mitmproxy must be installed separately:"
+  echo "  - macOS: brew install mitmproxy"
+  echo "  - Linux: Download from https://mitmproxy.org/"
+  echo "  - Windows: Download from https://mitmproxy.org/"
+  echo ""
+fi
+
+if ! command -v virtualbox &> /dev/null; then
+  if command -v apt-get &> /dev/null; then
+    sudo apt-get install -y virtualbox
+    echo "Make sure to setup virtualbox to run the updater."
+  fi
+fi
+
 echo "Available commands:"
 echo "  firmware-investigate      # Download firmware updaters"
 echo "  firmware-investigate-e2e  # Run end-to-end workflow"

@@ -71,7 +71,7 @@ For the end-to-end workflow, you may need:
 
 ### Command-line interface
 
-Download all vendor firmware tools (auto-detects platform):
+Download all vendor firmware upgrade tools (auto-detects platform):
 
 ```bash
 firmware-investigate

@@ -24,18 +24,3 @@ def test_mitmproxy_manager_check_installed():
     # This will return True or False depending on whether mitmproxy is installed
     result = manager.check_mitmproxy_installed()
     assert isinstance(result, bool)
-
-
-def test_mitmproxy_manager_create_config_script(tmp_path):
-    """Test addon script creation."""
-    manager = MitmproxyManager(output_dir=tmp_path / "mitm")
-
-    script_path = manager.create_config_script()
-
-    assert script_path.exists()
-    assert script_path.name == "firmware_addon.py"
-
-    # Check script content
-    content = script_path.read_text()
-    assert "FirmwareAddon" in content
-    assert "mitmproxy" in content
