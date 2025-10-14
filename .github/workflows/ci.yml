@@ -12,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
     
     steps:
     - uses: actions/checkout@v4
@@ -31,21 +31,12 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         # Download and install mitmproxy binary
-        MITM_VERSION="10.1.5"
-        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        MITM_VERSION="12.1.2"
+        wget https://downloads.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
         tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
         mkdir -p ~/.local/bin
         mv mitmdump mitmproxy mitmweb ~/.local/bin/
         echo "$HOME/.local/bin" >> $GITHUB_PATH
-    
-    - name: Install mitmproxy (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        # Download and install mitmproxy binary
-        $MITM_VERSION = "10.1.5"
-        Invoke-WebRequest -Uri "https://snapshots.mitmproxy.org/$MITM_VERSION/mitmproxy-$MITM_VERSION-windows-x86_64.zip" -OutFile mitmproxy.zip
-        Expand-Archive -Path mitmproxy.zip -DestinationPath mitmproxy
-        echo "$PWD/mitmproxy" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
     
     - name: Verify mitmproxy installation
       run: mitmdump --version
@@ -69,14 +60,21 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install mitmproxy
+    - name: Install mitmproxy (macOS)
+      if: runner.os == 'macOS'
+      run: brew install mitmproxy
+    
+    - name: Install mitmproxy (Linux)
+      if: runner.os == 'Linux'
       run: |
         # Download and install mitmproxy binary
-        MITM_VERSION="10.1.5"
-        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        MITM_VERSION="12.1.2"
+        wget https://downloads.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
         tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
-        sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
-    
+        mkdir -p ~/.local/bin
+        mv mitmdump mitmproxy mitmweb ~/.local/bin/
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+  
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -96,13 +94,20 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install mitmproxy
+    - name: Install mitmproxy (macOS)
+      if: runner.os == 'macOS'
+      run: brew install mitmproxy
+    
+    - name: Install mitmproxy (Linux)
+      if: runner.os == 'Linux'
       run: |
         # Download and install mitmproxy binary
-        MITM_VERSION="10.1.5"
-        wget https://snapshots.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+        MITM_VERSION="12.1.2"
+        wget https://downloads.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
         tar -xzf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
-        sudo mv mitmdump mitmproxy mitmweb /usr/local/bin/
+        mkdir -p ~/.local/bin
+        mv mitmdump mitmproxy mitmweb ~/.local/bin/
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
     
     - name: Install dependencies
       run: |
